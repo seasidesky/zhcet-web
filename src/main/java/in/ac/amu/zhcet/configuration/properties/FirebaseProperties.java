@@ -13,5 +13,5 @@ public class FirebaseProperties {
     private String databaseUrl;
     private String storageBucket;
     private String messagingServerKey;
-
+    private String projectId;
 }

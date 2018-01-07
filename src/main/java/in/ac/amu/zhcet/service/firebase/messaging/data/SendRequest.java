@@ -1,7 +1,6 @@
 package in.ac.amu.zhcet.service.firebase.messaging.data;
 
-import in.ac.amu.zhcet.service.firebase.messaging.data.request.DataBody;
-import in.ac.amu.zhcet.service.firebase.messaging.data.request.NotificationBody;
+import in.ac.amu.zhcet.service.firebase.messaging.data.request.Message;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SendRequest {
-    private String to;
-    private NotificationBody notification;
-    private DataBody data;
+    private Message message;
 }

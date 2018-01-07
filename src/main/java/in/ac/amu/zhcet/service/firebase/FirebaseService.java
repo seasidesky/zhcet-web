@@ -1,5 +1,6 @@
 package in.ac.amu.zhcet.service.firebase;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Bucket;
 import com.google.common.base.Strings;
@@ -8,26 +9,35 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.StorageClient;
 import in.ac.amu.zhcet.configuration.properties.FirebaseProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class FirebaseService {
 
+    private static final String MESSAGING_SCOPE[] = {"https://www.googleapis.com/auth/firebase.messaging", "https://www.googleapis.com/auth/cloud-platform"};
+
     private final boolean disabled;
     private final String messagingServerKey;
+    private final String projectId;
     private boolean uninitialized;
+
+    private GoogleCredential googleCredential;
 
     @Autowired
     public FirebaseService(FirebaseProperties firebase) throws IOException {
         log.info("Initializing Firebase");
         disabled = firebase.isDisabled();
         messagingServerKey = firebase.getMessagingServerKey();
+        projectId = firebase.getProjectId();
 
         if (disabled) {
             log.warn("CONFIG (Firebase): Firebase is disabled");
@@ -44,7 +54,15 @@ public class FirebaseService {
             return;
         }
 
-        GoogleCredentials googleCredentials = GoogleCredentials.fromStream(serviceAccountOptional.get());
+        String credentials = IOUtils.toString(serviceAccountOptional.get(), Charset.defaultCharset());
+
+        GoogleCredentials googleCredentials = GoogleCredentials
+                .fromStream(IOUtils.toInputStream(credentials, Charset.defaultCharset()));
+
+        googleCredential = GoogleCredential
+                .fromStream(IOUtils.toInputStream(credentials, Charset.defaultCharset()))
+                .createScoped(Arrays.asList(MESSAGING_SCOPE));
+
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(googleCredentials)
                 .setDatabaseUrl(firebase.getDatabaseUrl())
@@ -88,6 +106,13 @@ public class FirebaseService {
         return StorageClient.getInstance().bucket();
     }
 
+    public String getAccessToken() throws IOException {
+        if (!canProceed())
+            throw new IllegalStateException("Unable to get access token. Service not initialized!");
+        googleCredential.refreshToken();
+        return googleCredential.getAccessToken();
+    }
+
     public boolean canProceed() {
         boolean unproceedable = isUninitialized() || isDisabled();
         if (unproceedable)
@@ -120,4 +145,7 @@ public class FirebaseService {
         return messagingServerKey;
     }
 
+    public String getProjectId() {
+        return projectId;
+    }
 }
