@@ -29,10 +29,11 @@ public class PersistentTokenService implements PersistentTokenRepository {
     @Override
     @Transactional
     public void updateToken(String series, String tokenValue, Date lastUsed) {
-        PersistentLogin persistentLogin = persistentLoginRepository.findOne(series);
-        persistentLogin.setToken(tokenValue);
-        persistentLogin.setLastUsed(lastUsed);
-        persistentLoginRepository.save(persistentLogin);
+        persistentLoginRepository.findById(series).ifPresent(persistentLogin -> {
+            persistentLogin.setToken(tokenValue);
+            persistentLogin.setLastUsed(lastUsed);
+            persistentLoginRepository.save(persistentLogin);
+        });
     }
 
     @Override

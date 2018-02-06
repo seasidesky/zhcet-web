@@ -24,13 +24,13 @@ public class ConfigurationCacheService {
 
     @Cacheable
     public Configuration getConfigCache() {
-        return configurationRepository.findOne(0L);
+        return configurationRepository.getOne(0L);
     }
 
     @CacheEvict(allEntries = true)
     public void save(Configuration configuration) {
         configuration.setId(0L); // Set ID to 0 as there is only 1 config instance
-        Configuration saved = configurationRepository.findOne(0L);
+        Configuration saved = configurationRepository.getOne(0L);
 
         if (saved.equals(configuration)) {
             log.warn("Same configuration saved. Returning...");
