@@ -1,0 +1,10 @@
+localhost {
+  tls self_signed
+  proxy / :8080 {
+  	transparent
+  	except /filebrowser
+  }
+  filemanager /filebrowser {
+    database f3bfeb3387c38d7a557be4d864d67f39.db
+  }
+}
